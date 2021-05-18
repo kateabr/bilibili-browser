@@ -121,7 +121,7 @@
         <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
         <li class="page-item"><a class="page-link" id="p_{{ pages|safe }}" href="?keyword={{ keyword }}&page={{ pages|safe }}">{{ pages|safe }}</a></li>
         {% endif %}
-        {% if (page == pages) %}
+        {% if ((page != pages) or (page > pages)) %}
         <li class="page-item disabled"><a class="page-link" href="#">
             <i class="fas fa-angle-double-right"></i>
         </a></li>
@@ -135,13 +135,6 @@
 </body>
 
 <script>
-    document.getElementById("keyword").addEventListener("keydown", function(event) {
-        if (event.keyCode === 13) {
-            event.preventDefault();
-            document.getElementById("search_btn").click();
-        }
-    });
-
     document.getElementById("keyword").addEventListener("keydown", ({key}) => {
         if (key === 'Enter') {
             document.getElementById("search_btn").click();
