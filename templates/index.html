@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css">
+    <title>Bilibili browser</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="sticky-top container-fluid text-center" style="margin: 20px auto; background: white">
+    <table style="margin: auto">
+        <tr>
+            <td>
+        <form class="form-inline">
+            {% if (keyword == '') %}
+            <button style="pointer-events: none" type="button" class="btn btn-primary disabled" id="non_vocaloid_results"
+                    onclick="show_secondary()">Display secondary categories</button>
+            {% elif non_vocaloid %}
+            <button style="" type="button" class="btn btn-primary active" id="non_vocaloid_results"
+                    onclick="show_secondary()">Display secondary categories</button>
+            {% else %}
+            <button type="button" class="btn btn-primary" id="non_vocaloid_results"
+                    onclick="show_secondary()">Display secondary categories</button>
+            {% endif %}
+            <div class="form-group mx-sm-3">
+                <label for="keyword" class="sr-only">Keyword</label>
+                <input class="form-control" id="keyword" placeholder="Keyword" value="{{ keyword|safe }}">
+            </div>
+            <button id="search_btn" type="button" onclick="search()" class="btn btn-primary">
+                <div class="justify-content-center align-items-center">
+                    <div id="search_loupe" style="margin: auto" class=""><i class="fas fa-search"></i></div>
+                    <div style="margin: auto" class="sr-only spinner-border spinner-border-sm" id="load_animation" role="status" aria-hidden="true"></div>
+                </div>
+            </button>
+        </form>
+            </td>
+        </tr>
+    </table>
+</div>
+
+{% if (keyword != '') %}
+<div style="margin-bottom: 20px; margin-left:  2%; margin-right: 2%; z-index: 0">
+    <table class="table table-hover" data-search="true">
+        <thead>
+        <th style="vertical-align: middle" class="col-lg-3">Video preview</th>
+        <th style="vertical-align: middle" class="col-lg-4">Video info</th>
+        <th style="vertical-align: middle" class="col-lg-1">Category</th>
+        <th style="vertical-align: middle" class="col-lg-1">Bilibili ID</th>
+        <th class="col-lg-1">
+            {% if with_page %}
+            <a style="display: block" type="button" class="btn btn-primary active" id="vdb_page"
+                    onclick="show_listed()">VocaDB page</a>
+            {% else %}
+            <a style="display: block" type="button" class="btn btn-primary" id="vdb_page"
+                    onclick="show_listed()">VocaDB page</a>
+            {% endif %}
+        </th>
+        </thead>
+        {% for video in videos %}
+        {% if ((non_vocaloid or video.is_vocaloid) and (with_page or not(video.on_vdb))) %}
+        <tr id="res_{{ video.aid }}" class="">
+            {% else %}
+        <tr id="res_{{ video.aid }}" class="d-none">
+            {% endif %}
+            <td><iframe src="//player.bilibili.com/player.html?aid={{ video.aid|safe }}"
+                        scrolling="no" border="0" frameborder="no"
+                        framespacing="0" allowfullscreen="true"
+                        style="width: 480px; height: 240px; max-width: 100%"></iframe></td>
+            <td>{{ video.title|safe }}<span style="margin-left: 10px" class="badge badge-primary">{{ video.author|safe }}</span><br>
+                <small class="text-muted" style="white-space: pre-wrap">{{ video.description|safe }}</small></td>
+            <td>
+                <h5>
+                    {% if (video.typename|safe == 'VOCALOID·UTAU') %}
+                    <span class="badge badge-primary">
+            {% else %}
+            <span class="badge badge-secondary">
+            {% endif %}
+            {{ video.typename|safe }}
+            </span>
+                </h5>
+            </td>
+            <td><a href="https://www.bilibili.com/video/av{{ video.aid|safe }}" target="_blank">{{ video.aid|safe }}</a></td>
+            <td>
+                {% if video.on_vdb %}
+                <a type="button" class="btn btn-link" href="https://vocadb.net/S/{{ video.vdb_id|safe }}" target="_blank">✔️</a>
+                {% else %}
+                ❌
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+<nav aria-label="Pagination" style="margin-bottom: 40px">
+    <ul class="pagination justify-content-center">
+        {% if (page == 1) %}
+        <li class="page-item disabled"><a class="page-link" href="#">
+            <i class="fas fa-angle-double-left"></i>
+        </a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" id="p_prev" href="?keyword={{ keyword }}&page={{ page-1 }}">
+            <i class="fas fa-angle-double-left"></i>
+        </a></li>
+        {% endif %}
+        {% if left_bound %}
+        <li class="page-item"><a class="page-link" id="p_1" href="?keyword={{ keyword }}&page=1">1</a></li>
+        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+        {% endif %}
+        {% for pg in pg_range %}
+        {% if (pg == page) %}
+        <li class="page-item active" style="pointer-events: none">
+            {% else %}
+        <li class="page-item">
+            {% endif %}
+            <a class="page-link" id="p_{{ pg|safe }}" href="?keyword={{ keyword }}&page={{ pg }}">{{ pg|safe }}</a>
+        </li>
+        {% endfor %}
+        {% if right_bound %}
+        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+        <li class="page-item"><a class="page-link" id="p_{{ pages|safe }}" href="?keyword={{ keyword }}&page={{ pages|safe }}">{{ pages|safe }}</a></li>
+        {% endif %}
+        {% if (page == pages) %}
+        <li class="page-item disabled"><a class="page-link" href="#">
+            <i class="fas fa-angle-double-right"></i>
+        </a></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" id="p_next" href="?keyword={{ keyword }}&page={{ page+1 }}">
+            <i class="fas fa-angle-double-right"></i></a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+</body>
+
+<script>
+    document.getElementById("keyword").addEventListener("keydown", function(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("search_btn").click();
+        }
+    });
+
+    document.getElementById("keyword").addEventListener("keydown", ({key}) => {
+        if (key === 'Enter') {
+            document.getElementById("search_btn").click();
+        }
+    });
+
+    function search() {
+        document.getElementById('search_btn').disabled = 'disabled';
+        document.getElementById('search_loupe').className = 'sr-only';
+        document.getElementById('load_animation').className = 'spinner-border spinner-border-sm';
+        window.location.replace('/?keyword=' + document.getElementById('keyword').value);
+    }
+
+    function show_secondary() {
+        let result_ids = {{ videos|selectattr('is_vocaloid', 'false') | map(attribute='aid')|list }}
+        let not_display = Cookies.get('non_vocaloid') === 'False';
+        for (let i = 0; i < result_ids.length; ++i) {
+            if (!not_display) {
+                document.getElementById('res_' + result_ids[i]).className = 'd-none';
+                document.getElementById('non_vocaloid_results').className = 'btn btn-primary';
+            }
+            else {
+                document.getElementById('res_' + result_ids[i]).className = '';
+                document.getElementById('non_vocaloid_results').className = 'btn btn-primary active';
+            }
+        }
+        Cookies.set('non_vocaloid', !not_display ? 'False' : 'True', { expires: 100000, sameSite: 'lax'});
+    }
+
+    function show_listed() {
+        let result_ids = {{ videos|selectattr('on_vdb', 'true') | map(attribute='aid')|list }}
+        let not_display = Cookies.get('on_vdb') === 'False';
+        for (let i = 0; i < result_ids.length; ++i) {
+            if (!not_display) {
+                document.getElementById('res_' + result_ids[i]).className = 'd-none';
+                document.getElementById('vdb_page').className = 'btn btn-primary';
+            }
+            else {
+                document.getElementById('res_' + result_ids[i]).className = '';
+                document.getElementById('vdb_page').className = 'btn btn-primary active';
+            }
+        }
+        Cookies.set('on_vdb', !not_display ? 'False' : 'True', { expires: 100000, sameSite: 'lax'});
+    }
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</html>
