@@ -13,7 +13,7 @@
     <table style="margin: auto">
         <tr>
             <td>
-        <form class="form-inline">
+        <form class="form-inline" onsubmit="return false">
             {% if (keyword == '') %}
             <button style="pointer-events: none" type="button" class="btn btn-primary disabled" id="non_vocaloid_results"
                     onclick="show_secondary()">Display secondary categories</button>
