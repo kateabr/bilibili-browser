@@ -12,6 +12,7 @@ class BilibiliVideo:
     title: str
     description: str
     author: str
+    duration: str
     is_vocaloid: bool
     on_vdb: bool = False
     vdb_id: str = ''
@@ -47,9 +48,11 @@ def render_videos():
 
         parsed_videos = []
         for video in video_list:
+            mins, secs = video['duration'].split(':')
             parsed_videos.append(BilibiliVideo(video['id'], video['typename'],
                                                video['title'].replace('<em class="keyword">', '').replace('</em>', ''),
                                                video['description'], video['author'],
+                                               mins + ':' + (secs if len(secs) > 1 else f'0{secs}'),
                                                video['typename'] == 'VOCALOID·UTAU'))
 
         for i, _ in enumerate(parsed_videos):
